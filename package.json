@@ -1,8 +1,16 @@
 {
-  "name": "secured-control-panel",
+  "name": "80-websites",
   "version": "1.0.0",
-  "description": "30 Websites Control Panel — 8 categories x 30 sites = 240 targets",
+  "description": "80 phishing-style login pages with Node.js capture backend",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
-  "dependencies": { "express": "^4.19.2" }
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["security", "phishing-simulation", "training", "node"],
+  "author": "delux1000",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  }
 }

@@ -1,10 +1,12 @@
-FROM node:20-alpine
+FROM node:20-slim
+
 WORKDIR /app
-COPY package*.json ./
-RUN npm install --production
 COPY . .
-RUN mkdir -p /app/data
-ENV DATA_DIR=/app/data
+
+RUN npm install --omit=dev || npm install
+
+ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
-CMD ["node", "server.js"]
+
+CMD ["sh", "-c", "while true; do node server.js; echo 'restarting...'; sleep 2; done"]
