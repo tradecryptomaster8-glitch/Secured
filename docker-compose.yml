@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  control-panel:
+    build: .
+    container_name: secured-control-panel
+    ports:
+      - "3000:3000"
+    environment:
+      - DATA_DIR=/app/data
+      - PORT=3000
+    volumes:
+      - panel_data:/app/data
+    restart: unless-stopped
+volumes:
+  panel_data:
+    driver: local
